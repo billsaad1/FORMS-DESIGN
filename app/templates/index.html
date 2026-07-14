@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bilingual Protection Forms Manager</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+    body {
+      font-family: 'Inter', 'Cairo', sans-serif;
+      background-color: #f1f5f9;
+    }
+
+    /* A4 Print Layout rules */
+    .a4-page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 15mm;
+      margin: 20px auto;
+      background: white;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    @media print {
+      body {
+        background: white;
+        margin: 0;
+        padding: 0;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .a4-page {
+        width: 210mm;
+        height: 297mm;
+        margin: 0;
+        padding: 12mm;
+        box-shadow: none;
+        page-break-after: always;
+        box-sizing: border-box;
+      }
+      /* Prevent page breaks inside cells or headers */
+      tr, td, th {
+        page-break-inside: avoid;
+      }
+      h2, h3, .section-title {
+        page-break-inside: avoid;
+        keep-with-next: always;
+      }
+    }
+
+    /* Form-specific classes */
+    .rtl-text {
+      direction: rtl;
+      font-family: 'Cairo', sans-serif;
+    }
+    .ltr-text {
+      direction: ltr;
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
+</head>
+<body class="text-slate-800">
+
+  <!-- Header Section -->
+  <header class="bg-gradient-to-r from-blue-900 to-indigo-950 text-white shadow-md py-6 px-8 no-print">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-4">
+        <img src="/static/images/logo_emblem.png" alt="Logo" class="h-16 w-16 bg-white rounded-full p-1 border-2 border-amber-400">
+        <div>
+          <h1 class="text-2xl font-bold tracking-wide">جمعية جيل البناء للتنمية الإنسانية</h1>
+          <p class="text-indigo-200 text-sm font-medium tracking-wider">Jeel Al Bena Association for Humanitarian Development</p>
+          <span class="inline-block mt-1 bg-amber-500 text-slate-900 text-xs font-bold px-2 py-0.5 rounded uppercase tracking-wider">Protection Department</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-indigo-200 bg-indigo-900 px-3 py-1.5 rounded border border-indigo-800">Print Mode: A4 Optimized</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Control panel -->
+  <main class="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+
+    <!-- Tab Controls / Action Buttons -->
+    <div class="no-print bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex flex-wrap gap-2">
+        <button onclick="switchTab(1)" id="tab-btn-1" class="tab-btn px-5 py-3 rounded-lg font-bold text-sm transition-all duration-150 flex items-center gap-2 shadow-sm bg-blue-600 text-white">
+          <i class="fa-solid fa-file-invoice"></i>
+          <span>استمارة تقييم حالة فردية (1 - 4)</span>
+        </button>
+        <button onclick="switchTab(2)" id="tab-btn-2" class="tab-btn px-5 py-3 rounded-lg font-bold text-sm transition-all duration-150 flex items-center gap-2 shadow-sm bg-slate-100 text-slate-700 hover:bg-slate-200">
+          <i class="fa-solid fa-file-shield"></i>
+          <span>دراسة حالة وإدارة الحالة (5 - 6)</span>
+        </button>
+        <button onclick="switchTab(3)" id="tab-btn-3" class="tab-btn px-5 py-3 rounded-lg font-bold text-sm transition-all duration-150 flex items-center gap-2 shadow-sm bg-slate-100 text-slate-700 hover:bg-slate-200">
+          <i class="fa-solid fa-file-signature"></i>
+          <span>قرار النقد مقابل الحماية (7 - 8)</span>
+        </button>
+      </div>
+
+      <!-- Quick Actions for Active Tab -->
+      <div class="flex items-center gap-2">
+        <button onclick="triggerPrint()" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold px-4 py-2.5 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+          <i class="fa-solid fa-print"></i> Print (A4)
+        </button>
+        <button onclick="exportWord()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+          <i class="fa-regular fa-file-word"></i> Word (.docx)
+        </button>
+        <button onclick="exportExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+          <i class="fa-regular fa-file-excel"></i> Excel (.xlsx)
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Tab display context -->
+    <div class="no-print bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded mb-6 flex justify-between items-center">
+      <div class="flex items-center gap-3">
+        <i class="fa-solid fa-circle-info text-indigo-500 text-lg"></i>
+        <p class="text-sm text-indigo-900 font-medium">
+          Below is a high-fidelity visual print layout representation of the active document. Clicking 'Print (A4)' will print the pages with absolute structural consistency.
+        </p>
+      </div>
+      <div class="text-xs text-indigo-700 font-bold" id="page-counter">
+        Pages: 4
+      </div>
+    </div>
+
+    <!-- DOCUMENT AREA -->
+    <div id="forms-container" class="flex flex-col gap-10">
+
+      <!-- ==================== FORM 1: INDIVIDUAL ASSESSMENT FORM ==================== -->
+      <div id="form-tab-1" class="form-content-block">
+
+        <!-- PAGE 1 -->
+        <div class="a4-page relative">
+          <!-- Page header banner -->
+          <div class="flex justify-between items-start border-b-2 border-blue-900 pb-3 mb-6">
+            <div class="text-left">
+              <h2 class="text-lg font-bold text-slate-900 rtl-text">جمعية جيل البناء للتنمية الإنسانية</h2>
+              <p class="text-xs text-slate-600 ltr-text font-semibold">Jeel Al Bena Association for Humanitarian Development</p>
+              <p class="text-xs text-slate-500 italic ltr-text">Protection Department / قسم الحماية</p>
+            </div>
+            <img src="/static/images/emblem.png" alt="Emblem" class="h-12 w-12 object-contain">
+          </div>
+
+          <!-- Document Title -->
+          <div class="text-center my-6">
+            <h1 class="text-2xl font-bold text-blue-950 Cairo">استمارة تقييم حالة فردية</h1>
+            <p class="text-lg font-semibold text-slate-700 tracking-wide mt-1">Individual Assessment Form (PIAF)</p>
+          </div>
+
+          <!-- Basic Info Box -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-950 px-3 py-1.5 rounded-t-md border border-blue-950 flex justify-between">
+              <span>المعلومات الأساسية</span>
+              <span>Basic Information</span>
+            </h3>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="w-1/4 bg-slate-100 p-2 border border-slate-300 text-right font-bold">كود الحالة / Case Code</td>
+                  <td class="w-1/4 p-2 border border-slate-300">................................................</td>
+                  <td class="w-1/4 bg-slate-100 p-2 border border-slate-300 text-right font-bold">تاريخ التقييم / Evaluation Date</td>
+                  <td class="w-1/4 p-2 border border-slate-300">2025 / ______ / ______</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">اسم الموظف / Staff Name</td>
+                  <td class="p-2 border border-slate-300">................................................</td>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">المنظمة / Organization</td>
+                  <td class="p-2 border border-slate-300">................................................</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">المحافظة / Province</td>
+                  <td class="p-2 border border-slate-300">................................................</td>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">المديرية / District</td>
+                  <td class="p-2 border border-slate-300">................................................</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">المركز / Center</td>
+                  <td class="p-2 border border-slate-300">................................................</td>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">الموقع / Location</td>
+                  <td class="p-2 border border-slate-300">................................................</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">اسم المستفيد / Beneficiary Name</td>
+                  <td class="p-2 border border-slate-300">................................................</td>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">رقم الهاتف / Phone Number</td>
+                  <td class="p-2 border border-slate-300">................................................</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">العمر / Age</td>
+                  <td class="p-2 border border-slate-300">.................. (years / سنة)</td>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">الجنس / Gender</td>
+                  <td class="p-2 border border-slate-300">[  ] ذكر / Male &nbsp;&nbsp;&nbsp;&nbsp; [  ] أنثى / Female</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 1: Demographics -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-900 px-3 py-1.5 rounded-t-md border border-blue-900 flex justify-between">
+              <span>القسم الأول: البيانات الديموغرافية</span>
+              <span>Section 1: Demographics</span>
+            </h3>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="w-1/4 bg-slate-100 p-2 border border-slate-300 text-right font-bold">الحالة الاجتماعية / Marital Status</td>
+                  <td class="w-1/4 p-2 border border-slate-300">[ ] أعزب/Single &nbsp; [ ] متزوج/Married &nbsp; [ ] أرمل/Widowed &nbsp; [ ] مطلق/Divorced</td>
+                  <td class="w-1/4 bg-slate-100 p-2 border border-slate-300 text-right font-bold">عدد أفراد الأسرة / Family Size</td>
+                  <td class="w-1/4 p-2 border border-slate-300">.................. (members / أفراد)</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">حالة النزوح / Displacement Status</td>
+                  <td class="p-2 border border-slate-300">[ ] نازح / IDP &nbsp;&nbsp; [ ] عائد / Returnee &nbsp;&nbsp; [ ] مجتمع مضيف / Host</td>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">تاريخ النزوح / Date of Displacement</td>
+                  <td class="p-2 border border-slate-300">______ / ______ / 2025</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">العنوان الحالي / Current Address</td>
+                  <td class="p-2 border border-slate-300">................................................</td>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">العنوان الأصلي / Original Address</td>
+                  <td class="p-2 border border-slate-300">................................................</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">حالة التسجيل / Registration Status</td>
+                  <td class="p-2 border border-slate-300">[ ] مسجل / Registered &nbsp;&nbsp;&nbsp;&nbsp; [ ] غير مسجل / Unregistered</td>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">الاحتياجات الخاصة / Specific Needs</td>
+                  <td class="p-2 border border-slate-300">[ ] نعم / Yes &nbsp;&nbsp;&nbsp;&nbsp; [ ] لا / No</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 2: Specific Vulnerabilities -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-900 px-3 py-1.5 rounded-t-md border border-blue-900 flex justify-between">
+              <span>القسم الثاني: نقاط الضعف الخاصة</span>
+              <span>Section 2: Specific Vulnerabilities</span>
+            </h3>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="p-3 border border-slate-300 w-1/2">[  ] طفل معرض للخطر / Child at risk</td>
+                  <td class="p-3 border border-slate-300 w-1/2">[  ] عائل وحيد / Single parent</td>
+                </tr>
+                <tr>
+                  <td class="p-3 border border-slate-300">[  ] مسن معرض للخطر / Older person at risk</td>
+                  <td class="p-3 border border-slate-300">[  ] حالة طبية حرجة / Serious medical condition</td>
+                </tr>
+                <tr>
+                  <td class="p-3 border border-slate-300">[  ] إعاقة جسدية / Physical disability</td>
+                  <td class="p-3 border border-slate-300">[  ] إعاقة ذهنية / Mental disability</td>
+                </tr>
+                <tr>
+                  <td class="p-3 border border-slate-300">[  ] امرأة حامل أو مرضعة / Pregnant or lactating</td>
+                  <td class="p-3 border border-slate-300">[  ] امرأة معرضة للخطر / Woman at risk</td>
+                </tr>
+                <tr>
+                  <td class="p-3 border border-slate-300">[  ] ناجٍ من العنف / Survivor of violence</td>
+                  <td class="p-3 border border-slate-300">[  ] غير ذلك (حدد) / Other (Specify): ........................................</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Footer element -->
+          <div class="absolute bottom-4 left-15 right-15 flex justify-between text-slate-400 text-2xs uppercase tracking-wider font-bold text-[10px] border-t pt-2 border-slate-200">
+            <span>Jeel Al Bena Association</span>
+            <span>Page 1 of 4</span>
+          </div>
+        </div>
+
+        <!-- PAGE 2 -->
+        <div class="a4-page relative">
+          <!-- Page header banner -->
+          <div class="flex justify-between items-start border-b-2 border-blue-900 pb-3 mb-6">
+            <div class="text-left">
+              <h2 class="text-lg font-bold text-slate-900 rtl-text">جمعية جيل البناء للتنمية الإنسانية</h2>
+              <p class="text-xs text-slate-600 ltr-text font-semibold">Jeel Al Bena Association for Humanitarian Development</p>
+              <p class="text-xs text-slate-500 italic ltr-text">Protection Department / قسم الحماية</p>
+            </div>
+            <img src="/static/images/emblem.png" alt="Emblem" class="h-12 w-12 object-contain">
+          </div>
+
+          <!-- Section 3: Assessment Details & Displacement History -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-900 px-3 py-1.5 rounded-t-md border border-blue-900 flex justify-between">
+              <span>القسم الثالث: تفاصيل التقييم وتاريخ النزوح</span>
+              <span>Section 3: Assessment Details & Displacement History</span>
+            </h3>
+
+            <div class="p-3 bg-slate-50 border-x border-b border-slate-300 text-xs">
+              <p class="font-bold mb-2">أسباب النزوح والوضع الحالي / Reasons for displacement and current situation:</p>
+              <div class="h-48 border border-dashed border-slate-300 bg-white rounded p-3 text-slate-400">
+                Type or write the assessment details here... / اكتب تفاصيل التقييم هنا...
+              </div>
+            </div>
+          </div>
+
+          <!-- Living Conditions -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-900 px-3 py-1.5 rounded-t-md border border-blue-900 flex justify-between">
+              <span>الظروف المعيشية والسكن</span>
+              <span>Living Conditions & Accommodation</span>
+            </h3>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="w-1/3 bg-slate-100 p-3 border border-slate-300 text-right font-bold">نوع السكن / Accommodation Type</td>
+                  <td class="w-2/3 p-3 border border-slate-300">[  ] إيجار / Rented &nbsp;&nbsp; [  ] مع عائلة مضيفة / Host Family &nbsp;&nbsp; [  ] خيمة / Tent &nbsp;&nbsp; [  ] منزل متضرر / Damaged house</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-3 border border-slate-300 text-right font-bold">مصدر الدخل / Source of Income</td>
+                  <td class="p-3 border border-slate-300">................................................................................................................</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-3 border border-slate-300 text-right font-bold">الدخل الشهري / Monthly Income</td>
+                  <td class="p-3 border border-slate-300">........................................ dollars / دولار</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="absolute bottom-4 left-15 right-15 flex justify-between text-slate-400 text-2xs uppercase tracking-wider font-bold text-[10px] border-t pt-2 border-slate-200">
+            <span>Jeel Al Bena Association</span>
+            <span>Page 2 of 4</span>
+          </div>
+        </div>
+
+        <!-- PAGE 3 -->
+        <div class="a4-page relative">
+          <!-- Page header banner -->
+          <div class="flex justify-between items-start border-b-2 border-blue-900 pb-3 mb-6">
+            <div class="text-left">
+              <h2 class="text-lg font-bold text-slate-900 rtl-text">جمعية جيل البناء للتنمية الإنسانية</h2>
+              <p class="text-xs text-slate-600 ltr-text font-semibold">Jeel Al Bena Association for Humanitarian Development</p>
+              <p class="text-xs text-slate-500 italic ltr-text">Protection Department / قسم الحماية</p>
+            </div>
+            <img src="/static/images/emblem.png" alt="Emblem" class="h-12 w-12 object-contain">
+          </div>
+
+          <!-- Section 4: Risk Analysis & Protection Concerns -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-900 px-3 py-1.5 rounded-t-md border border-blue-900 flex justify-between">
+              <span>القسم الرابع: تحليل المخاطر ومخاوف الحماية</span>
+              <span>Section 4: Risk Analysis & Protection Concerns</span>
+            </h3>
+
+            <div class="p-3 bg-slate-50 border-x border-b border-slate-300 text-xs mb-6">
+              <p class="font-bold mb-2">يرجى تقديم وصف تفصيلي لمخاطر الحماية التي يواجهها المستفيد وأسرته / Please provide a detailed description of the protection risks faced by the beneficiary and their family:</p>
+              <div class="h-64 border border-dashed border-slate-300 bg-white rounded p-3 text-slate-400">
+                Type or write the risk details here... / اكتب تفاصيل تحليل المخاطر ومخاوف الحماية هنا...
+              </div>
+            </div>
+
+            <h4 class="font-bold text-xs text-blue-950 mb-2">مخاوف ومخاطر الحماية المحددة / Specific Protection Risks & Concerns</h4>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="p-3 border border-slate-300 w-1/2">[  ] تهديدات الأمن والسلامة / Safety & Security Threats</td>
+                  <td class="p-3 border border-slate-300 w-1/2">[  ] الضيق النفسي والاجتماعي / Psychosocial distress</td>
+                </tr>
+                <tr>
+                  <td class="p-3 border border-slate-300">[  ] عمالة الأطفال / Child labor</td>
+                  <td class="p-3 border border-slate-300">[  ] نقص الوثائق المدنية / Lack of civil documentation</td>
+                </tr>
+                <tr>
+                  <td class="p-3 border border-slate-300">[  ] خطر الإخلاء / Risk of eviction</td>
+                  <td class="p-3 border border-slate-300">[  ] التمييز والاستبعاد / Discrimination & exclusion</td>
+                </tr>
+                <tr>
+                  <td class="p-3 border border-slate-300">[  ] العنف القائم على النوع الاجتماعي / Gender-based violence</td>
+                  <td class="p-3 border border-slate-300">[  ] مخاطر أخرى / Other risks: ........................................</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="absolute bottom-4 left-15 right-15 flex justify-between text-slate-400 text-2xs uppercase tracking-wider font-bold text-[10px] border-t pt-2 border-slate-200">
+            <span>Jeel Al Bena Association</span>
+            <span>Page 3 of 4</span>
+          </div>
+        </div>
+
+        <!-- PAGE 4 -->
+        <div class="a4-page relative">
+          <!-- Page header banner -->
+          <div class="flex justify-between items-start border-b-2 border-blue-900 pb-3 mb-6">
+            <div class="text-left">
+              <h2 class="text-lg font-bold text-slate-900 rtl-text">جمعية جيل البناء للتنمية الإنسانية</h2>
+              <p class="text-xs text-slate-600 ltr-text font-semibold">Jeel Al Bena Association for Humanitarian Development</p>
+              <p class="text-xs text-slate-500 italic ltr-text">Protection Department / قسم الحماية</p>
+            </div>
+            <img src="/static/images/emblem.png" alt="Emblem" class="h-12 w-12 object-contain">
+          </div>
+
+          <!-- Section 5: Action Plan & Referrals -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-900 px-3 py-1.5 rounded-t-md border border-blue-900 flex justify-between">
+              <span>القسم الخامس: خطة العمل والإحالات</span>
+              <span>Section 5: Action Plan & Referrals</span>
+            </h3>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="w-1/3 bg-slate-100 p-3 border border-slate-300 text-right font-bold">المساعدة الموصى بها / Recommended Assistance</td>
+                  <td class="w-2/3 p-3 border border-slate-300">
+                    [ ] خدمات الحماية / Protection services &nbsp;&nbsp; [ ] المساعدة النقدية / Cash support<br>
+                    [ ] دعم المأوى / Shelter support &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [ ] المساعدة القانونية / Legal support
+                  </td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-3 border border-slate-300 text-right font-bold">إحالة داخلية / Internal Referral</td>
+                  <td class="p-3 border border-slate-300">إلى قسم: ........................................................................................................</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-3 border border-slate-300 text-right font-bold">إحالة خارجية / External Referral</td>
+                  <td class="p-3 border border-slate-300">إلى منظمة/جهة: ................................................................................................</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-3 border border-slate-300 text-right font-bold">الإجراء المتخذ فورا / Immediate Action Taken</td>
+                  <td class="p-3 border border-slate-300">................................................................................................................</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Signatures -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-900 px-3 py-1.5 rounded-t-md border border-blue-900 flex justify-between">
+              <span>التوقيعات والموافقات</span>
+              <span>Signatures & Approvals</span>
+            </h3>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="w-1/2 p-4 border border-slate-300 h-28">
+                    <p class="font-bold mb-2">اسم وتوقيع الموظف المقيم / Assessor Signature</p>
+                    <p class="mt-4">الاسم: ........................................................</p>
+                    <p class="mt-2">التوقيع: ....................................................</p>
+                    <p class="mt-2">التاريخ / Date: ______/______/2025</p>
+                  </td>
+                  <td class="w-1/2 p-4 border border-slate-300 h-28">
+                    <p class="font-bold mb-2">اسم وتوقيع مشرف الحماية / Supervisor Signature</p>
+                    <p class="mt-4">الاسم: ........................................................</p>
+                    <p class="mt-2">التوقيع: ....................................................</p>
+                    <p class="mt-2">التاريخ / Date: ______/______/2025</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="absolute bottom-4 left-15 right-15 flex justify-between text-slate-400 text-2xs uppercase tracking-wider font-bold text-[10px] border-t pt-2 border-slate-200">
+            <span>Jeel Al Bena Association</span>
+            <span>Page 4 of 4</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================== FORM 2: CASE STUDY & CASE MANAGEMENT FORM ==================== -->
+      <div id="form-tab-2" class="form-content-block hidden">
+
+        <!-- PAGE 1 -->
+        <div class="a4-page relative">
+          <!-- Page header banner -->
+          <div class="flex justify-between items-start border-b-2 border-blue-900 pb-3 mb-6">
+            <div class="text-left">
+              <h2 class="text-lg font-bold text-slate-900 rtl-text">جمعية جيل البناء للتنمية الإنسانية</h2>
+              <p class="text-xs text-slate-600 ltr-text font-semibold">Jeel Al Bena Association for Humanitarian Development</p>
+              <p class="text-xs text-slate-500 italic ltr-text">Protection Department / قسم الحماية</p>
+            </div>
+            <img src="/static/images/emblem.png" alt="Emblem" class="h-12 w-12 object-contain">
+          </div>
+
+          <!-- Document Title -->
+          <div class="text-center my-6">
+            <h1 class="text-2xl font-bold text-blue-950 Cairo">نموذج دراسة الحالة وإدارة الحالة</h1>
+            <p class="text-lg font-semibold text-slate-700 tracking-wide mt-1">Protection Case Study and Case Management Form</p>
+          </div>
+
+          <!-- Registration -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-950 px-3 py-1.5 rounded-t-md border border-blue-950 flex justify-between">
+              <span>القسم الأول: تسجيل الحالة والمعلومات العامة</span>
+              <span>Section 1: Case Registration & General Info</span>
+            </h3>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="w-1/4 bg-slate-100 p-2 border border-slate-300 text-right font-bold">كود الحالة / Case Code</td>
+                  <td class="w-1/4 p-2 border border-slate-300">................................................</td>
+                  <td class="w-1/4 bg-slate-100 p-2 border border-slate-300 text-right font-bold">تاريخ فتح الحالة / Case Opening Date</td>
+                  <td class="w-1/4 p-2 border border-slate-300">______ / ______ / 2025</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">مسؤول الحالة / Case Worker</td>
+                  <td class="p-2 border border-slate-300">................................................</td>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">مصدر الإحالة / Referral Source</td>
+                  <td class="p-2 border border-slate-300">................................................</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">الاسم الكامل للمستفيد / Full Name</td>
+                  <td class="p-2 border border-slate-300">................................................</td>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">العمر / Age</td>
+                  <td class="p-2 border border-slate-300">.................. years / سنة</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">الجنس / Gender</td>
+                  <td class="p-2 border border-slate-300">[  ] ذكر / Male &nbsp;&nbsp;&nbsp;&nbsp; [  ] أنثى / Female</td>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">رقم الهاتف / Phone Number</td>
+                  <td class="p-2 border border-slate-300">................................................</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">العنوان الحالي / Current Address</td>
+                  <td class="p-2 border border-slate-300" colspan="3">................................................................................................................</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 2: Case Description & Assessment -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-900 px-3 py-1.5 rounded-t-md border border-blue-900 flex justify-between">
+              <span>القسم الثاني: وصف وتقييم الحالة</span>
+              <span>Section 2: Case Description & Assessment</span>
+            </h3>
+            <div class="p-3 bg-slate-50 border-x border-b border-slate-300 text-xs">
+              <p class="font-bold mb-2">الخلفية التفصيلية للحالة ومخاطر الحماية الفورية / Detailed background of the case and immediate protection risks:</p>
+              <div class="h-64 border border-dashed border-slate-300 bg-white rounded p-3 text-slate-400">
+                Type or write the case study description here... / اكتب تفاصيل وصف وتقييم الحالة هنا...
+              </div>
+            </div>
+          </div>
+
+          <div class="absolute bottom-4 left-15 right-15 flex justify-between text-slate-400 text-2xs uppercase tracking-wider font-bold text-[10px] border-t pt-2 border-slate-200">
+            <span>Jeel Al Bena Association</span>
+            <span>Page 1 of 2</span>
+          </div>
+        </div>
+
+        <!-- PAGE 2 -->
+        <div class="a4-page relative">
+          <!-- Page header banner -->
+          <div class="flex justify-between items-start border-b-2 border-blue-900 pb-3 mb-6">
+            <div class="text-left">
+              <h2 class="text-lg font-bold text-slate-900 rtl-text">جمعية جيل البناء للتنمية الإنسانية</h2>
+              <p class="text-xs text-slate-600 ltr-text font-semibold">Jeel Al Bena Association for Humanitarian Development</p>
+              <p class="text-xs text-slate-500 italic ltr-text">Protection Department / قسم الحماية</p>
+            </div>
+            <img src="/static/images/emblem.png" alt="Emblem" class="h-12 w-12 object-contain">
+          </div>
+
+          <!-- Section 3: Case Action Plan -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-900 px-3 py-1.5 rounded-t-md border border-blue-900 flex justify-between">
+              <span>القسم الثالث: خطة عمل الحالة</span>
+              <span>Section 3: Case Action Plan</span>
+            </h3>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <thead>
+                <tr class="bg-blue-950 text-white font-bold">
+                  <th class="p-2 border border-slate-300 w-1/5 text-center">الهدف / Objective</th>
+                  <th class="p-2 border border-slate-300 w-1/5 text-center">الإجراء المطلوب / Action Required</th>
+                  <th class="p-2 border border-slate-300 w-1/5 text-center">الشخص المسؤول / Responsible</th>
+                  <th class="p-2 border border-slate-300 w-1/5 text-center">الإطار الزمني / Timeframe</th>
+                  <th class="p-2 border border-slate-300 w-1/5 text-center">الحالة / Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="h-12">
+                  <td class="p-2 border border-slate-300"></td>
+                  <td class="p-2 border border-slate-300"></td>
+                  <td class="p-2 border border-slate-300"></td>
+                  <td class="p-2 border border-slate-300"></td>
+                  <td class="p-2 border border-slate-300"></td>
+                </tr>
+                <tr class="h-12">
+                  <td class="p-2 border border-slate-300"></td>
+                  <td class="p-2 border border-slate-300"></td>
+                  <td class="p-2 border border-slate-300"></td>
+                  <td class="p-2 border border-slate-300"></td>
+                  <td class="p-2 border border-slate-300"></td>
+                </tr>
+                <tr class="h-12">
+                  <td class="p-2 border border-slate-300"></td>
+                  <td class="p-2 border border-slate-300"></td>
+                  <td class="p-2 border border-slate-300"></td>
+                  <td class="p-2 border border-slate-300"></td>
+                  <td class="p-2 border border-slate-300"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 4: Follow-up & Case Closure -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-900 px-3 py-1.5 rounded-t-md border border-blue-900 flex justify-between">
+              <span>القسم الرابع: المتابعة وإغلاق الحالة</span>
+              <span>Section 4: Follow-up & Case Closure</span>
+            </h3>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="w-1/3 bg-slate-100 p-3 border border-slate-300 text-right font-bold">ملخص زيارات المتابعة / Summary of follow-up visits</td>
+                  <td class="w-2/3 p-3 border border-slate-300">................................................................................................................</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-3 border border-slate-300 text-right font-bold">حالة الحالة / Case Status</td>
+                  <td class="p-3 border border-slate-300">[  ] نشطة / Active &nbsp;&nbsp;&nbsp;&nbsp; [  ] مغلقة / Closed &nbsp;&nbsp;&nbsp;&nbsp; [  ] معلقة / Suspended</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-3 border border-slate-300 text-right font-bold">أسباب الإغلاق / Reasons for closure</td>
+                  <td class="p-3 border border-slate-300">[  ] تم تحقيق الأهداف / Goals met &nbsp;&nbsp;&nbsp;&nbsp; [  ] اكتمال الإحالة / Referral complete &nbsp;&nbsp;&nbsp;&nbsp; [  ] انتقال / Relocation</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Signatures -->
+          <div class="mb-6">
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="w-1/2 p-4 border border-slate-300 h-28">
+                    <p class="font-bold mb-2">اسم وتوقيع مسؤول الحالة / Case Worker Signature</p>
+                    <p class="mt-4">الاسم: ........................................................</p>
+                    <p class="mt-2">التوقيع: ....................................................</p>
+                    <p class="mt-2">التاريخ / Date: ______/______/2025</p>
+                  </td>
+                  <td class="w-1/2 p-4 border border-slate-300 h-28">
+                    <p class="font-bold mb-2">اسم وتوقيع مشرف إدارة الحالة / Supervisor Signature</p>
+                    <p class="mt-4">الاسم: ........................................................</p>
+                    <p class="mt-2">التوقيع: ....................................................</p>
+                    <p class="mt-2">التاريخ / Date: ______/______/2025</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="absolute bottom-4 left-15 right-15 flex justify-between text-slate-400 text-2xs uppercase tracking-wider font-bold text-[10px] border-t pt-2 border-slate-200">
+            <span>Jeel Al Bena Association</span>
+            <span>Page 2 of 2</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================== FORM 3: CASH FOR PROTECTION APPROVAL FORM ==================== -->
+      <div id="form-tab-3" class="form-content-block hidden">
+
+        <!-- PAGE 1 -->
+        <div class="a4-page relative">
+          <!-- Page header banner -->
+          <div class="flex justify-between items-start border-b-2 border-blue-900 pb-3 mb-6">
+            <div class="text-left">
+              <h2 class="text-lg font-bold text-slate-900 rtl-text">جمعية جيل البناء للتنمية الإنسانية</h2>
+              <p class="text-xs text-slate-600 ltr-text font-semibold">Jeel Al Bena Association for Humanitarian Development</p>
+              <p class="text-xs text-slate-500 italic ltr-text">Protection Department / قسم الحماية</p>
+            </div>
+            <img src="/static/images/emblem.png" alt="Emblem" class="h-12 w-12 object-contain">
+          </div>
+
+          <!-- Document Title -->
+          <div class="text-center my-6">
+            <h1 class="text-2xl font-bold text-blue-950 Cairo">نموذج قرار النقد مقابل الحماية</h1>
+            <p class="text-lg font-semibold text-slate-700 tracking-wide mt-1">Cash for Protection Approval Form</p>
+          </div>
+
+          <!-- Basic Info -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-950 px-3 py-1.5 rounded-t-md border border-blue-950 flex justify-between">
+              <span>المعلومات الأساسية</span>
+              <span>Basic Information</span>
+            </h3>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="w-1/3 bg-slate-100 p-2.5 border border-slate-300 text-right font-bold">معرّف الحالة (Case ID)</td>
+                  <td class="w-2/3 p-2.5 border border-slate-300">................................................................................................</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2.5 border border-slate-300 text-right font-bold">تاريخ التقييم / Evaluation Date</td>
+                  <td class="p-2.5 border border-slate-300">2025 / ______ / ______</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2.5 border border-slate-300 text-right font-bold">تاريخ قرار الموافقة / Approval Decision Date</td>
+                  <td class="p-2.5 border border-slate-300">2025 / ______ / ______</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2.5 border border-slate-300 text-right font-bold">نوع الخطر الحمائي / Protection Risk Type</td>
+                  <td class="p-2.5 border border-slate-300">................................................................................................</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 1: Case Summary -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-900 px-3 py-1.5 rounded-t-md border border-blue-900 flex justify-between">
+              <span>القسم الأول: ملخص الحالة</span>
+              <span>Section 1: Case Summary</span>
+            </h3>
+
+            <p class="font-bold text-xs text-blue-950 my-2">1.1 البيانات الأساسية للمستفيد / Beneficiary Basic Data</p>
+            <table class="w-full text-xs border-collapse border border-slate-300 mb-4">
+              <tbody>
+                <tr>
+                  <td class="w-1/3 bg-slate-100 p-2 border border-slate-300 text-right font-bold">الاسم أو معرف / Name or ID</td>
+                  <td class="w-2/3 p-2 border border-slate-300">................................................................................................</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">العمر / Age</td>
+                  <td class="p-2 border border-slate-300">.................. سنة / years</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">الجنس / Gender</td>
+                  <td class="p-2 border border-slate-300">[  ] ذكر / Male &nbsp;&nbsp;&nbsp;&nbsp; [  ] أنثى / Female</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2 border border-slate-300 text-right font-bold">عدد أفراد الأسرة / Family Members</td>
+                  <td class="p-2 border border-slate-300">.................. أفراد / members</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <p class="font-bold text-xs text-blue-950 my-2">1.2 ملخص الخطر / Risk Summary</p>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="w-1/3 bg-slate-100 p-3 border border-slate-300 text-right font-bold">الخطر الأساسي / Primary Risk</td>
+                  <td class="w-2/3 p-3 border border-slate-300">
+                    <div class="h-16 border border-dashed border-slate-300 bg-white rounded p-1 text-slate-400">
+                      Primary Risk Description...
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-3 border border-slate-300 text-right font-bold">الشدة / Severity</td>
+                  <td class="p-3 border border-slate-300">
+                    <p class="mb-1">[ ] حاد وفوري جداً (24-48 ساعة) / Very acute and immediate (24-48 hours)</p>
+                    <p class="mb-1">[ ] حاد (3-5 أيام) / Acute (3-5 days)</p>
+                    <p>[ ] متوسط (أسبوع - أسبوعين) / Moderate (1-2 weeks)</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="absolute bottom-4 left-15 right-15 flex justify-between text-slate-400 text-2xs uppercase tracking-wider font-bold text-[10px] border-t pt-2 border-slate-200">
+            <span>Jeel Al Bena Association</span>
+            <span>Page 1 of 2</span>
+          </div>
+        </div>
+
+        <!-- PAGE 2 -->
+        <div class="a4-page relative">
+          <!-- Page header banner -->
+          <div class="flex justify-between items-start border-b-2 border-blue-900 pb-3 mb-6">
+            <div class="text-left">
+              <h2 class="text-lg font-bold text-slate-900 rtl-text">جمعية جيل البناء للتنمية الإنسانية</h2>
+              <p class="text-xs text-slate-600 ltr-text font-semibold">Jeel Al Bena Association for Humanitarian Development</p>
+              <p class="text-xs text-slate-500 italic ltr-text">Protection Department / قسم الحماية</p>
+            </div>
+            <img src="/static/images/emblem.png" alt="Emblem" class="h-12 w-12 object-contain">
+          </div>
+
+          <!-- Section 1.3 Proposed Solution and Amount -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-900 px-3 py-1.5 rounded-t-md border border-blue-900 flex justify-between">
+              <span>1.3 الحل المقترح والمبلغ</span>
+              <span>Proposed Solution and Amount</span>
+            </h3>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="w-1/3 bg-slate-100 p-3 border border-slate-300 text-right font-bold">كيف سيساعد النقد؟ / How will cash help?</td>
+                  <td class="w-2/3 p-3 border border-slate-300">
+                    <div class="h-12 border border-dashed border-slate-300 bg-white rounded p-1 text-slate-400">
+                      Explanation...
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-3 border border-slate-300 text-right font-bold">المبلغ المقترح / Proposed Amount</td>
+                  <td class="p-3 border border-slate-300">........................................ دولار / dollars</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-3 border border-slate-300 text-right font-bold">السبب / Reason</td>
+                  <td class="p-3 border border-slate-300">
+                    <div class="h-12 border border-dashed border-slate-300 bg-white rounded p-1 text-slate-400">
+                      Reason for the proposed solution...
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 2: Protection Department Approval -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-900 px-3 py-1.5 rounded-t-md border border-blue-900 flex justify-between">
+              <span>القسم الثاني: موافقة قسم الحماية</span>
+              <span>Section 2: Protection Department Approval</span>
+            </h3>
+
+            <p class="font-bold text-xs text-blue-950 my-2">2.1 مراجعة التقييم / Evaluation Review</p>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="w-1/3 bg-slate-100 p-2.5 border border-slate-300 text-right font-bold">وضوح الخطر / Risk Clarity</td>
+                  <td class="w-2/3 p-2.5 border border-slate-300">[ ] واضح جداً / Very Clear &nbsp;&nbsp;&nbsp;&nbsp; [ ] واضح / Clear &nbsp;&nbsp;&nbsp;&nbsp; [ ] غامض / Vague</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2.5 border border-slate-300 text-right font-bold">الربط السببي / Causal Link</td>
+                  <td class="p-2.5 border border-slate-300">[ ] منطقي جداً / Very Logical &nbsp;&nbsp;&nbsp;&nbsp; [ ] منطقي / Logical &nbsp;&nbsp;&nbsp;&nbsp; [ ] ضعيف / Weak</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2.5 border border-slate-300 text-right font-bold">كفاية التقييم / Evaluation Adequacy</td>
+                  <td class="p-2.5 border border-slate-300">[ ] شامل / Comprehensive &nbsp;&nbsp;&nbsp;&nbsp; [ ] متوسط / Moderate &nbsp;&nbsp;&nbsp;&nbsp; [ ] ناقص / Incomplete</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-2.5 border border-slate-300 text-right font-bold">المخاطر الثانوية / Secondary Risks</td>
+                  <td class="p-2.5 border border-slate-300">[ ] منخفضة / Low &nbsp;&nbsp;&nbsp;&nbsp; [ ] متوسطة / Medium &nbsp;&nbsp;&nbsp;&nbsp; [ ] عالية / High</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 3: Final Decision -->
+          <div class="mb-6">
+            <h3 class="text-sm font-bold text-white bg-blue-950 px-3 py-1.5 rounded-t-md border border-blue-950 flex justify-between">
+              <span>القسم الثالث: القرار النهائي من مدير الحماية</span>
+              <span>Section 3: Final Decision from Protection Manager</span>
+            </h3>
+            <table class="w-full text-xs border-collapse border border-slate-300">
+              <tbody>
+                <tr>
+                  <td class="w-1/3 bg-slate-100 p-3 border border-slate-300 text-right font-bold">القرار النهائي للمدير / Final Decision</td>
+                  <td class="w-2/3 p-3 border border-slate-300">[ ] موافق على الصرف / Approved &nbsp;&nbsp;&nbsp;&nbsp; [ ] غير موافق / Not Approved</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-3 border border-slate-300 text-right font-bold">المبلغ وآلية الصرف / Amount & Mechanism</td>
+                  <td class="p-3 border border-slate-300">المبلغ: ........................ دولار &nbsp;&nbsp;&nbsp;&nbsp; الآلية: [ ] نقد / Cash &nbsp;&nbsp; [ ] حوالة / Transfer</td>
+                </tr>
+                <tr>
+                  <td class="bg-slate-100 p-3 border border-slate-300 text-right font-bold">التاريخ والتوقيع / Date & Signature</td>
+                  <td class="p-3 border border-slate-300">
+                    <p>الاسم: ........................................................</p>
+                    <p class="mt-1">التوقيع: ....................................................</p>
+                    <p class="mt-1">التاريخ / Date: ______/______/2025</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="absolute bottom-4 left-15 right-15 flex justify-between text-slate-400 text-2xs uppercase tracking-wider font-bold text-[10px] border-t pt-2 border-slate-200">
+            <span>Jeel Al Bena Association</span>
+            <span>Page 2 of 2</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- JS Code for Handling Tab switches, Printing and Export Requests -->
+  <script>
+    let activeTab = 1;
+
+    function switchTab(tabId) {
+      activeTab = tabId;
+
+      // Update Tab Button Styles
+      for (let i = 1; i <= 3; i++) {
+        const btn = document.getElementById(`tab-btn-${i}`);
+        const content = document.getElementById(`form-tab-${i}`);
+
+        if (i === tabId) {
+          btn.className = "tab-btn px-5 py-3 rounded-lg font-bold text-sm transition-all duration-150 flex items-center gap-2 shadow-sm bg-blue-600 text-white";
+          content.classList.remove('hidden');
+        } else {
+          btn.className = "tab-btn px-5 py-3 rounded-lg font-bold text-sm transition-all duration-150 flex items-center gap-2 shadow-sm bg-slate-100 text-slate-700 hover:bg-slate-200";
+          content.classList.add('hidden');
+        }
+      }
+
+      // Update Page counter indicator
+      const counter = document.getElementById('page-counter');
+      if (tabId === 1) {
+        counter.textContent = "Pages: 4";
+      } else {
+        counter.textContent = "Pages: 2";
+      }
+    }
+
+    function triggerPrint() {
+      window.print();
+    }
+
+    function exportWord() {
+      window.location.href = `/export/word/${activeTab}`;
+    }
+
+    function exportExcel() {
+      window.location.href = `/export/excel/${activeTab}`;
+    }
+  </script>
+</body>
+</html>
